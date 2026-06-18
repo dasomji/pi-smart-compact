@@ -1,53 +1,91 @@
 # pi-smart-compact
 
-A planned [pi](https://pi.dev) extension for cooperative, handoff-driven compaction before context windows become unhealthy.
+`pi-smart-compact` is a [pi](https://pi.dev) package that adds cooperative, handoff-driven compaction for long-running main agents and subagents.
 
-`pi-smart-compact` is designed for long-running agents and subagents that keep working through multi-step plans. Instead of imposing a hard cutoff, it nudges the active agent at configurable context boundaries, asks it to finish the current atomic task, save important state, write its own handoff, and call a `smart_compact` tool. The handoff is then used as the compaction summary and the agent is automatically told to continue.
+Instead of imposing a hard cutoff, the extension watches context usage, sends visible boundary warnings, asks the active agent to finish the current atomic task, save important state, write its own handoff, and call the `smart_compact` tool. That handoff becomes the same-session compaction summary, then the extension sends one automatic `continue` so work resumes without creating a replacement session.
 
-> Status: PRD-stage. The product requirements are captured in [`docs/prd.md`](docs/prd.md); implementation has not started yet.
+> Status: development package with the core extension behavior implemented and covered by mocked Pi API tests. Manual verification in a real Pi session should follow [`docs/manual-testing.md`](docs/manual-testing.md) before publishing.
 
-## Intended behavior
+## Installation
 
-- Default smart boundary: `100k` tokens.
-- Configurable global boundary via `/smart-boundary`.
-- Escalation every `20k` tokens after the boundary.
-- Steering messages become progressively firmer, but never force a cutoff.
-- The agent decides when its current atomic task is safe to stop.
-- The agent calls `smart_compact` with a self-authored handoff.
-- The extension injects that handoff as the compaction summary.
-- After compaction, the extension automatically sends `continue`.
-- Same-session behavior preserves main-agent and subagent run identity.
-- Native pi auto-compaction remains untouched as the underlying safety net.
+Install from GitHub:
 
-## Why
-
-Native compaction is useful, but long-running agents may never become idle at a convenient point. A hard cutoff can interrupt fragile work; a purely idle-based flow is too late. This extension explores a cooperative model: warn early, escalate gradually, and let the agent choose a coherent handoff boundary.
-
-## Planned package shape
-
-```text
-pi-smart-compact/
-├── docs/
-│   └── prd.md
-├── extensions/
-│   └── smart-compact.ts
-├── package.json
-├── LICENSE
-└── README.md
+```sh
+pi install https://github.com/dasomji/pi-smart-compact.git
 ```
 
-## Planned pi APIs
+Install from a local checkout while developing:
 
-The implementation is expected to use public pi extension surfaces:
+```sh
+pi install ../pi-smart-compact
+# or
+pi install /absolute/path/to/pi-smart-compact
+```
 
-- `ctx.getContextUsage()` for token usage.
-- `turn_end` for threshold checks.
-- `pi.sendUserMessage(..., { deliverAs: "steer" })` for escalation prompts.
-- `pi.registerCommand("smart-boundary", ...)` for global configuration.
-- `pi.registerTool({ name: "smart_compact", ... })` for agent-authored handoff submission.
-- `ctx.compact()` to trigger compaction.
-- `session_before_compact` to provide the handoff as the compaction summary.
-- `session_compact` to clear pending state and continue.
+## Configure `/smart-boundary`
+
+The default smart boundary is `100k` tokens (`100,000`). Warnings escalate every additional `20k` tokens. The setting is global for this package and applies to main agents and subagents.
+
+```text
+/smart-boundary
+```
+
+Show the current boundary.
+
+```text
+/smart-boundary 100k
+/smart-boundary 120000
+```
+
+Set the boundary using `k` shorthand or a plain positive whole-number token count. Deliberately low positive values are accepted for manual testing.
+
+```text
+/smart-boundary reset
+```
+
+Reset to the default `100k` boundary.
+
+## Agent workflow
+
+When usage crosses the configured boundary, pi-smart-compact sends a visible steering warning. Later warnings become firmer at each `20k` escalation band, but the extension still does not force compaction.
+
+Expected flow: warning -> handoff -> `smart_compact` -> same-session compaction -> `continue`.
+
+The agent should finish the current atomic task/current unit at a safe stopping point, avoid starting major new work, save important files or artifacts, and then call `smart_compact` alone as the final tool call for that mini-phase.
+
+The `smart_compact` handoff should include:
+
+- progress/current task state and where work stopped;
+- decisions made and important rationale;
+- relevant files and saved artifacts;
+- validation status, including tests or checks run and any not run;
+- remaining risks or blockers;
+- concrete next steps for the continuation.
+
+After `smart_compact` starts compaction, the pending handoff is used by the `session_before_compact` hook as the compaction summary. When the matching `session_compact` event completes, the pending handoff is cleared and exactly one `continue` user message is sent in the same session.
+
+## Failure, cancel, and native compaction behavior
+
+If smart compaction fails to start, errors, is cancelled, or cannot safely customize the summary, the pending stale handoff is cleared/expired. A later manual/native compaction is not overridden by that stale handoff, no automatic `continue` is sent for the failed flow, and the agent or user may retry explicitly by calling `smart_compact` again with a fresh handoff.
+
+Manual or native Pi compaction without a pending smart handoff behaves normally. Native pi auto-compaction remains unchanged and independent as the underlying safety net.
+
+## Limitations
+
+- pi-smart-compact is cooperative and does not force compaction; agent compliance is not guaranteed.
+- There are no project-specific, per-agent, or per-subagent boundary settings yet.
+- Native pi auto-compaction remains unchanged and independent.
+- The extension preserves same-session behavior and intentionally does not create replacement sessions.
+- `smart_compact` is designed as a terminal mini-phase tool call, but a multi-tool batch may still depend on Pi runtime termination semantics.
+
+## Development
+
+```sh
+npm test
+npx tsc --noEmit
+```
+
+See [`docs/prd.md`](docs/prd.md) for product requirements and [`docs/manual-testing.md`](docs/manual-testing.md) for manual verification.
 
 ## License
 

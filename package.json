@@ -1,0 +1,35 @@
+{
+  "name": "pi-smart-compact",
+  "version": "0.1.0",
+  "description": "smart cooperative compaction extension for pi agents and subagents.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dasomji/pi-smart-compact.git"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "compaction",
+    "agent"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions"
+    ]
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "typebox": "^1.1.38"
+  }
+}
