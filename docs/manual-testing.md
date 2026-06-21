@@ -4,9 +4,10 @@ Use this guide to verify `pi-smart-compact` in a real Pi session after the autom
 
 ## Setup
 
-Install the package from GitHub or from a local checkout:
+Install the package from npm, GitHub, or from a local checkout:
 
 ```sh
+pi install npm:@wienerberliner/pi-smart-compact
 pi install https://github.com/dasomji/pi-smart-compact.git
 pi install ../pi-smart-compact
 ```

@@ -108,6 +108,11 @@ describe("U6 documentation contract", () => {
     expect(readme, "README.md exists").not.toEqual("");
     expectMatches(
       readme,
+      /pi\s+install\s+npm:@wienerberliner\/pi-smart-compact/i,
+      "README shows installation from npm using the scoped package name",
+    );
+    expectMatches(
+      readme,
       /pi\s+install\s+(?:git\+)?https:\/\/github\.com\/dasomji\/pi-smart-compact(?:\.git)?/i,
       "README shows installation from GitHub",
     );

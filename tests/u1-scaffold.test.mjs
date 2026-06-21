@@ -21,7 +21,7 @@ describe("U1 package scaffold", () => {
 
     const manifest = await readJson(packageJsonPath);
 
-    assert.equal(manifest.name, "pi-smart-compact");
+    assert.equal(manifest.name, "@wienerberliner/pi-smart-compact");
     assert.equal(manifest.license, "MIT");
     assert.notEqual(manifest.private, true, "package should be publishable, not private");
     assert.ok(manifest.description?.includes("smart"), "package should describe smart compaction");

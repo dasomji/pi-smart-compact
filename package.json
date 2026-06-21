@@ -1,5 +1,5 @@
 {
-  "name": "pi-smart-compact",
+  "name": "@wienerberliner/pi-smart-compact",
   "version": "0.1.1",
   "description": "smart cooperative compaction extension for pi agents and subagents.",
   "license": "MIT",

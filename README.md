@@ -8,6 +8,18 @@ Instead of imposing a hard cutoff, the extension watches context usage, sends vi
 
 ## Installation
 
+Install from npm after publishing:
+
+```sh
+pi install npm:@wienerberliner/pi-smart-compact
+```
+
+For the first public publish of the scoped package, use npm's public access flag:
+
+```sh
+npm publish --access public
+```
+
 Install from GitHub:
 
 ```sh
