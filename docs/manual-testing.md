@@ -45,19 +45,47 @@ The public names are `/smart-boundary` for user configuration and `smart_compact
 
 A valid `smart_compact` handoff should include:
 
-- progress/current task state and where the current atomic task stopped;
+- current task / atomic stopping point;
+- progress completed;
 - decisions made and important rationale;
 - relevant files and saved artifacts;
 - validation status, including tests or checks run and any not run;
 - remaining risks or blockers;
 - concrete next steps for the continuation.
 
+Soft handoff template:
+
+```md
+Current task / atomic stopping point:
+Progress completed:
+Decisions / rationale:
+Files and artifacts:
+Validation:
+Risks / blockers:
+Next steps:
+```
+
+For substantial analysis, review, or debugging findings, verify the agent saves a concise report or notes artifact when practical and includes its path in the handoff. If `smart_compact` is unavailable in the active toolset, the expected fallback is a final handoff-style response with the same fields.
+
+## Subagent tool-access checks
+
+Subagents can use smart compaction only if `smart_compact` is available in that child agent's toolset. A child may still receive the boundary warning even when it cannot call the tool.
+
+Before testing or relying on long-running subagent smart compaction:
+
+1. From the parent/orchestrator, inspect subagent discovery and the target agent details, for example with `subagent({ action: "list" })` and `subagent({ action: "get", agent: "worker" })` or the relevant runtime agent name.
+2. Check whether the child has an explicit `tools` allowlist. If it does, confirm `smart_compact` is included.
+3. For custom agents or overrides with explicit tools, configure the tools list to include `smart_compact`, for example `tools: read, grep, find, ls, bash, smart_compact`.
+4. Run the low-boundary subagent scenario below and verify the child can actually call `smart_compact`. If the child cannot call it, verify it returns the fallback handoff-style final response instead.
+
+Child-agent self-check: at a boundary, use `smart_compact` if it appears in the available tools. If it is absent, stop after the current atomic unit and return the same handoff fields in the final response.
+
 ## Main-agent scenario
 
 1. Start a normal main-agent Pi session with the package enabled.
 2. Run `/smart-boundary 100` or another deliberately low positive boundary.
 3. Ask the agent to do a small multi-step task that creates enough conversation/tool output to cross the low boundary.
-4. Verify a visible boundary warning/steering message appears. It should tell the agent to finish the current atomic task, save artifacts, write a handoff, and call `smart_compact` when ready.
+4. Verify a visible boundary warning/steering message appears. It should tell the agent to finish the current atomic task, optionally complete only a short bounded check or file write that materially improves the handoff, save artifacts, write a handoff, and call `smart_compact` when ready.
 5. Let the agent reach a natural stopping point. Verify the workflow: warning -> handoff -> `smart_compact` -> same-session compaction -> single continue.
 6. After the automatic `continue`, verify the agent resumes in the same session using the handoff summary, rather than a replacement session.
 7. Check that only one `continue` message is sent for that smart compaction.
@@ -67,11 +95,12 @@ A valid `smart_compact` handoff should include:
 
 1. Start a parent/main agent and ask it to launch or delegate work to a subagent in the usual Pi way.
 2. Ensure the global boundary is low before the subagent does substantial work, for example `/smart-boundary 100`.
-3. Give the subagent a small multi-step task that crosses the low boundary.
-4. Verify the subagent receives the warning, finishes only the current atomic task, writes its handoff, and calls `smart_compact`.
-5. Verify the subagent path also follows warning -> handoff -> `smart_compact` -> same-session compaction -> single continue.
-6. Confirm the parent still tracks the same subagent run and receives the eventual result normally; no new replacement session should appear.
-7. Reset the boundary with `/smart-boundary reset`.
+3. Confirm the selected subagent has `smart_compact` in its toolset, especially if it has an explicit `tools` allowlist.
+4. Give the subagent a small multi-step task that crosses the low boundary.
+5. Verify the subagent receives the warning, finishes only the current atomic task, writes its handoff, and calls `smart_compact`. If the subagent toolset lacks `smart_compact`, verify it returns a final handoff-style response with the same fields instead.
+6. Verify the subagent path also follows warning -> handoff -> `smart_compact` -> same-session compaction -> single continue.
+7. Confirm the parent still tracks the same subagent run and receives the eventual result normally; no new replacement session should appear.
+8. Reset the boundary with `/smart-boundary reset`.
 
 ## Failure, cancel, and manual/native compaction scenario
 

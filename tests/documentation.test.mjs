@@ -73,6 +73,34 @@ function expectKnownLimitations(text, label) {
   }
 }
 
+function expectSubagentToolAccessGuidance(text, label) {
+  expectMatches(
+    text,
+    /subagents?[\s\S]{0,180}(?:toolset|tools)/i,
+    `${label} explains that subagent tool access matters`,
+  );
+  expectMatches(
+    text,
+    /smart_compact[\s\S]{0,180}(?:toolset|tools|allowlist)|(?:toolset|tools|allowlist)[\s\S]{0,180}smart_compact/i,
+    `${label} says smart_compact must be in the child toolset/allowlist`,
+  );
+  expectMatches(
+    text,
+    /subagent\(\{\s*action:\s*["']list["']\s*\}\)|subagent\(\{\s*action:\s*["']get["']/i,
+    `${label} tells parent agents how to inspect subagent configuration`,
+  );
+  expectMatches(
+    text,
+    /tools:\s*read,\s*grep,\s*find,\s*ls,\s*bash,\s*smart_compact|read,grep,find,ls,bash,smart_compact/i,
+    `${label} gives an explicit tools allowlist example including smart_compact`,
+  );
+  expectMatches(
+    text,
+    /unavailable[\s\S]{0,180}handoff-style|handoff-style[\s\S]{0,180}unavailable/i,
+    `${label} explains the fallback when smart_compact is unavailable`,
+  );
+}
+
 describe("U6 documentation contract", () => {
   test("README documents installation, status, and public command/tool usage", () => {
     const readme = readText(README_PATH);
@@ -127,6 +155,7 @@ describe("U6 documentation contract", () => {
       "README explains stale handoff is not reused and retry/manual-native behavior after failure/cancel",
     );
     expectKnownLimitations(readme, "README");
+    expectSubagentToolAccessGuidance(readme, "README");
   });
 
   test("manual verification guide exists and covers low-boundary main-agent and subagent scenarios", () => {
@@ -176,5 +205,6 @@ describe("U6 documentation contract", () => {
       "manual testing guide verifies later manual/native compaction is unaffected after failure/cancel",
     );
     expectKnownLimitations(manual, "manual testing guide");
+    expectSubagentToolAccessGuidance(manual, "manual testing guide");
   });
 });

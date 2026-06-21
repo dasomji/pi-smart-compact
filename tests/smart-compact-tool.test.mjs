@@ -109,6 +109,8 @@ describe("U4 smart_compact tool and pending handoff state", () => {
     assert.match(guidance, /validation|test/i, "guidance should ask for validation status");
     assert.match(guidance, /risk|blocker/i, "guidance should ask for risks/blockers");
     assert.match(guidance, /next\s+step/i, "guidance should ask for concrete next steps");
+    assert.match(guidance, /Current task\s*\/\s*atomic stopping point/i, "guidance should include the soft handoff template");
+    assert.match(guidance, /unavailable[\s\S]{0,160}handoff-style|handoff-style[\s\S]{0,160}unavailable/i, "guidance should explain fallback behavior if the tool is unavailable");
     assert.match(guidance, /alone|only\s+tool|final\s+action|last\s+action/i, "guidance should say to call smart_compact alone as the final action");
   });
 

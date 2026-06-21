@@ -86,8 +86,12 @@ function assertPromptInstructsSmartCompaction(message) {
   assert.match(message, /current\s+atomic\s+task|atomic\s+task|current\s+unit/i);
   assert.match(message, /avoid|do\s+not|don't|before\s+starting/i);
   assert.match(message, /major\s+new\s+work|new\s+major\s+step|future\s+work|next\s+major/i);
+  assert.match(message, /short\s+bounded\s+check|bounded\s+check|file\s+write/i);
   assert.match(message, /artifact/i);
   assert.match(message, /handoff/i);
+  assert.match(message, /Current task\s*\/\s*atomic stopping point/i);
+  assert.match(message, /Risks\s*\/\s*blockers/i);
+  assert.match(message, /unavailable[\s\S]{0,120}handoff-style|handoff-style[\s\S]{0,120}unavailable/i);
   assert.match(message, /smart_compact/i);
 }
 

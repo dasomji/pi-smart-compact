@@ -1,6 +1,6 @@
 {
   "name": "pi-smart-compact",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "smart cooperative compaction extension for pi agents and subagents.",
   "license": "MIT",
   "type": "module",
