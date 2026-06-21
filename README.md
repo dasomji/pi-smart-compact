@@ -34,6 +34,16 @@ pi install ../pi-smart-compact
 pi install /absolute/path/to/pi-smart-compact
 ```
 
+## Trigger `/smart-compact`
+
+Use `/smart-compact` to manually request cooperative smart compaction. It asks the active agent to finish the current atomic task, write an agent-authored handoff from its current context, and call `smart_compact` at the next safe boundary.
+
+```text
+/smart-compact
+```
+
+Do not pass handoff text to this command. The handoff must be written by the active agent because it has the currently relevant working context.
+
 ## Configure `/smart-boundary`
 
 The default smart boundary is `100k` tokens (`100,000`). Warnings escalate every additional `20k` tokens. The setting is global for this package and applies to main agents and subagents.

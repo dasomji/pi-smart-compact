@@ -10,10 +10,11 @@ import type {
 import { Type } from "typebox";
 
 import { createSmartBoundaryConfig, type SmartBoundaryConfigStore } from "../src/config.js";
-import { SMART_BOUNDARY_COMMAND_NAME, SMART_COMPACT_TOOL_NAME } from "../src/constants.js";
+import { SMART_BOUNDARY_COMMAND_NAME, SMART_COMPACT_COMMAND_NAME, SMART_COMPACT_TOOL_NAME } from "../src/constants.js";
 import { calculateEscalationBand, isHigherEscalationBand } from "../src/escalation.js";
 import {
   buildEscalationPrompt,
+  buildManualSmartCompactRequestPrompt,
   SMART_COMPACT_HANDOFF_GUIDANCE,
   SMART_COMPACT_PROMPT_GUIDELINES,
   SMART_COMPACT_PROMPT_SNIPPET,
@@ -53,6 +54,7 @@ export default function smartCompactExtension(pi: ExtensionAPI) {
     await monitorContextUsage(pi, ctx, config, runtimeState);
   });
 
+  registerSmartCompactCommand(pi);
   registerSmartCompactTool(pi, runtimeState);
   registerSmartCompactionHooks(pi, runtimeState);
 
@@ -92,6 +94,45 @@ export default function smartCompactExtension(pi: ExtensionAPI) {
       return notify(ctx, `Smart boundary set to ${formatTokens(saved.tokens)}.`) as unknown as void;
     },
   });
+}
+
+function registerSmartCompactCommand(pi: ExtensionAPI): void {
+  pi.registerCommand(SMART_COMPACT_COMMAND_NAME, {
+    description: "Request cooperative smart compaction with an agent-authored handoff.",
+    handler: async (args: string, ctx: ExtensionCommandContext): Promise<void> => {
+      if (args.trim()) {
+        return notify(
+          ctx,
+          "Run /smart-compact without handoff text. The active agent must author the handoff from its current context and then call smart_compact.",
+          "error",
+        ) as unknown as void;
+      }
+
+      try {
+        await sendManualSmartCompactRequest(pi, ctx);
+        return notify(
+          ctx,
+          "Smart compaction requested. The agent has been asked to stop at the next safe boundary, write a handoff, and call smart_compact.",
+        ) as unknown as void;
+      } catch (error) {
+        return notify(ctx, `Smart compaction request could not be sent: ${errorMessage(error)}`, "error") as unknown as void;
+      }
+    },
+  });
+}
+
+async function sendManualSmartCompactRequest(pi: ExtensionAPI, ctx: ExtensionCommandContext): Promise<void> {
+  const message = buildManualSmartCompactRequestPrompt();
+  const options = shouldDeliverCommandMessageAsSteer(ctx) ? { deliverAs: "steer" as const } : {};
+  await Promise.resolve(pi.sendUserMessage(message, options));
+}
+
+function shouldDeliverCommandMessageAsSteer(ctx: ExtensionCommandContext): boolean {
+  try {
+    return typeof ctx.isIdle === "function" ? !ctx.isIdle() : false;
+  } catch {
+    return false;
+  }
 }
 
 function registerSmartCompactTool(pi: ExtensionAPI, runtimeState: SmartCompactRuntimeState): void {

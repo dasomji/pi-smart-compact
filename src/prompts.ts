@@ -39,6 +39,18 @@ export interface EscalationPromptInput {
   band: number;
 }
 
+export function buildManualSmartCompactRequestPrompt(): string {
+  return [
+    "Manual smart compaction requested by the user.",
+    "Finish the current atomic task/current unit at a natural stopping point. If a short bounded check or file write will materially improve the handoff, complete it first; avoid major new work and do not start a new unit of work.",
+    "Before compacting, save important artifacts or files. For substantial analysis/review/debug findings, save a concise report or notes artifact when practical.",
+    "Write a concise handoff covering progress/current task state, stopping point, decisions, files/artifacts, validation, risks, and next steps.",
+    `Soft handoff template when helpful:\n${SMART_COMPACT_HANDOFF_TEMPLATE}`,
+    "When ready, call `smart_compact` with that handoff. Call `smart_compact` alone as the final action/only tool call for this mini-phase, then wait for continuation after compaction.",
+    "If `smart_compact` is unavailable in this toolset, return a final handoff-style response with the same fields instead.",
+  ].join("\n");
+}
+
 export function buildEscalationPrompt({ tokens, boundaryTokens, band }: EscalationPromptInput): string {
   const tokenContext = `Current estimated context usage is ${formatTokens(tokens)} tokens; the configured smart boundary is ${formatTokens(boundaryTokens)} tokens.`;
 

@@ -42,7 +42,9 @@ Reset when finished:
 
 ## What to verify
 
-The public names are `/smart-boundary` for user configuration and `smart_compact` for the agent-authored handoff tool.
+The public names are `/smart-boundary` for user configuration, `/smart-compact` for manually requesting the cooperative flow, and `smart_compact` for the agent-authored handoff tool.
+
+To test the manual command, run `/smart-compact` in an active session and verify it sends a visible user message instructing the agent to finish the current atomic task, prepare a handoff from its current context, and call `smart_compact`. Also verify `/smart-compact <handoff text>` is rejected: user-supplied handoff text must not start compaction because the active agent must author the handoff.
 
 A valid `smart_compact` handoff should include:
 
