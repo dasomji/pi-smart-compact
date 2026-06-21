@@ -1,0 +1,19 @@
+{
+  "packages": [
+    {
+      "source": "git:github.com/dasomji/pi-smart-compact",
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    },
+    {
+      "source": "npm:@wienerberliner/pi-smart-compact",
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    },
+    ".."
+  ]
+}
